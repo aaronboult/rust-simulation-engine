@@ -10,10 +10,15 @@ use bytemuck;
 use cgmath;
 use wgpu::util::DeviceExt;
 
+mod model;
 mod texture;
+
+use model::Vertex;
 
 #[cfg(target_arch = "wasm32")]
 pub use wasm_bindgen::prelude::*;
+
+use crate::model::ModelVertex;
 
 #[cfg(target_arch = "wasm32")]
 pub const WASM_ELEMENT_ID: &str = "wasm-example";
@@ -48,172 +53,6 @@ const INSTANCE_SHADER_LOCATION: u32 = 5; // 5-8 inclusive
 
 // Type alias for size
 type WindowSize = winit::dpi::PhysicalSize<u32>;
-
-// Vertex
-#[repr(C)]
-#[derive(Clone, Copy, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-struct Vertex {
-    position: [f32; 3],
-    texture_coordinates: [f32; 2],
-}
-
-impl Vertex {
-    const VERTEX_ATTRIBUTES: [wgpu::VertexAttribute; 2] =
-        wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x2];
-
-    fn get_buffer_layout<'a>() -> wgpu::VertexBufferLayout<'a> {
-        use std::mem;
-
-        wgpu::VertexBufferLayout {
-            array_stride: mem::size_of::<Self>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &Self::VERTEX_ATTRIBUTES,
-        }
-    }
-}
-
-// Polygon vertices
-const _POLYGON_VERTICES: &[Vertex] = &[
-    Vertex {
-        position: [-0.0868241, 0.49240386, 0.0],
-        texture_coordinates: [0.4131759, 0.00759614],
-    },
-    Vertex {
-        position: [-0.49513406, 0.06958647, 0.0],
-        texture_coordinates: [0.0048659444, 0.43041354],
-    },
-    Vertex {
-        position: [-0.21918549, -0.44939706, 0.0],
-        texture_coordinates: [0.28081453, 0.949397],
-    },
-    Vertex {
-        position: [0.35966998, -0.3473291, 0.0],
-        texture_coordinates: [0.85967, 0.84732914],
-    },
-    Vertex {
-        position: [0.44147372, 0.2347359, 0.0],
-        texture_coordinates: [0.9414737, 0.2652641],
-    },
-];
-
-// Polygon indicies
-const _POLYGON_INDICES: &[u16] = &[0, 1, 4, 1, 2, 4, 2, 3, 4];
-
-// Cube vertices using Ccw winding and indexing
-const _CUBE_VERTICES: &[Vertex] = &[
-    // Top
-    Vertex {
-        position: [-0.5, 0.5, -0.5],
-        texture_coordinates: [0.0, 0.0],
-    },
-    Vertex {
-        position: [0.5, 0.5, -0.5],
-        texture_coordinates: [1.0, 0.0],
-    },
-    Vertex {
-        position: [0.5, 0.5, 0.5],
-        texture_coordinates: [1.0, 1.0],
-    },
-    Vertex {
-        position: [-0.5, 0.5, 0.5],
-        texture_coordinates: [0.0, 1.0],
-    },
-    // Bottom
-    Vertex {
-        position: [-0.5, -0.5, -0.5],
-        texture_coordinates: [1.0, 1.0],
-    },
-    Vertex {
-        position: [0.5, -0.5, -0.5],
-        texture_coordinates: [0.0, 1.0],
-    },
-    Vertex {
-        position: [0.5, -0.5, 0.5],
-        texture_coordinates: [0.0, 0.0],
-    },
-    Vertex {
-        position: [-0.5, -0.5, 0.5],
-        texture_coordinates: [1.0, 0.0],
-    },
-    // Left
-    Vertex {
-        position: [-0.5, 0.5, 0.5],
-        texture_coordinates: [0.0, 0.0],
-    },
-    Vertex {
-        position: [-0.5, 0.5, -0.5],
-        texture_coordinates: [1.0, 0.0],
-    },
-    Vertex {
-        position: [-0.5, -0.5, -0.5],
-        texture_coordinates: [1.0, 1.0],
-    },
-    Vertex {
-        position: [-0.5, -0.5, 0.5],
-        texture_coordinates: [0.0, 1.0],
-    },
-    // Right
-    Vertex {
-        position: [0.5, 0.5, 0.5],
-        texture_coordinates: [1.0, 1.0],
-    },
-    Vertex {
-        position: [0.5, 0.5, -0.5],
-        texture_coordinates: [0.0, 1.0],
-    },
-    Vertex {
-        position: [0.5, -0.5, -0.5],
-        texture_coordinates: [0.0, 0.0],
-    },
-    Vertex {
-        position: [0.5, -0.5, 0.5],
-        texture_coordinates: [1.0, 0.0],
-    },
-    // Front
-    Vertex {
-        position: [0.5, 0.5, 0.5],
-        texture_coordinates: [1.0, 0.0],
-    },
-    Vertex {
-        position: [-0.5, 0.5, 0.5],
-        texture_coordinates: [0.0, 0.0],
-    },
-    Vertex {
-        position: [-0.5, -0.5, 0.5],
-        texture_coordinates: [0.0, 1.0],
-    },
-    Vertex {
-        position: [0.5, -0.5, 0.5],
-        texture_coordinates: [1.0, 1.0],
-    },
-    // Back
-    Vertex {
-        position: [0.5, 0.5, -0.5],
-        texture_coordinates: [0.0, 1.0],
-    },
-    Vertex {
-        position: [-0.5, 0.5, -0.5],
-        texture_coordinates: [1.0, 1.0],
-    },
-    Vertex {
-        position: [-0.5, -0.5, -0.5],
-        texture_coordinates: [1.0, 0.0],
-    },
-    Vertex {
-        position: [0.5, -0.5, -0.5],
-        texture_coordinates: [0.0, 0.0],
-    },
-];
-
-// Cube indicies
-const _CUBE_INDICES: &[u16] = &[
-    0, 1, 2, 2, 3, 0, // Top
-    4, 5, 6, 6, 7, 4, // Bottom
-    8, 9, 10, 10, 11, 8, // Left
-    12, 13, 14, 14, 15, 12, // Right
-    16, 17, 18, 18, 19, 16, // Front
-    20, 21, 22, 22, 23, 20, // Back
-];
 
 // Instance Raw
 #[repr(C)]
@@ -425,11 +264,9 @@ struct Context {
     size: WindowSize,
     window: Window,
     render_pipeline: wgpu::RenderPipeline,
-    vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
-    index_count: u32,
     diffuse_bind_group: wgpu::BindGroup,
     _diffuse_texture: texture::Texture,
+    depth_texture: texture::Texture,
     camera: Camera,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
@@ -503,7 +340,11 @@ impl Context {
 
         surface.configure(&device, &config);
 
-        // Load texture
+        // Create depth texture
+        let depth_texture =
+            texture::Texture::create_depth_texture(&device, &config, "DepthTexture");
+
+        // Create diffuse texture
         const DIFFUSE_BYTES: &[u8] = include_bytes!("textures/happy-tree.png");
 
         let diffuse_texture =
@@ -595,20 +436,6 @@ impl Context {
         // Create render pipeline
         let shader = device.create_shader_module(wgpu::include_wgsl!("shaders/shader.wgsl"));
 
-        // Create vertex buffer
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("VertexBuffer"),
-            contents: bytemuck::cast_slice(_CUBE_VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-
-        // Create index buffer
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("IndexBuffer"),
-            contents: bytemuck::cast_slice(_CUBE_INDICES),
-            usage: wgpu::BufferUsages::INDEX,
-        });
-
         // Create instances - TEMPORARY
         let instances = (0..NUM_INSTANCES_PER_ROW)
             .flat_map(|z| {
@@ -656,7 +483,7 @@ impl Context {
                 module: &shader,
                 entry_point: "vs_main",
                 buffers: &[
-                    Vertex::get_buffer_layout(),
+                    ModelVertex::get_buffer_layout(),
                     InstanceRaw::get_buffer_layout(),
                 ],
             },
@@ -684,7 +511,13 @@ impl Context {
                 // Requires Features::CONSERVATIVE_RASTERIZATION
                 conservative: false,
             },
-            depth_stencil: None,
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: texture::Texture::DEPTH_FORMAT,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less,
+                stencil: wgpu::StencilState::default(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,
@@ -701,11 +534,9 @@ impl Context {
             size,
             window,
             render_pipeline,
-            vertex_buffer,
-            index_buffer,
-            index_count: _CUBE_INDICES.len() as u32,
             diffuse_bind_group,
             _diffuse_texture: diffuse_texture,
+            depth_texture,
             camera,
             camera_uniform,
             camera_buffer,
@@ -728,6 +559,9 @@ impl Context {
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             self.surface.configure(&self.device, &self.config);
+            self.camera.aspect = self.config.width as f32 / self.config.height as f32;
+            self.depth_texture =
+                texture::Texture::create_depth_texture(&self.device, &self.config, "DepthTexture");
         }
     }
 
@@ -796,7 +630,14 @@ impl Context {
                         store: true,
                     },
                 })],
-                depth_stencil_attachment: None,
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_texture.view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: true,
+                    }),
+                    stencil_ops: None,
+                }),
             });
 
             // Set pipeline
@@ -807,11 +648,7 @@ impl Context {
             render_pass.set_bind_group(1, &self.camera_bind_group, &[]);
 
             // Set vertex buffer
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
-
-            // Set index buffer
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
 
             // Draw 3 vertices with 1 instance
             render_pass.draw_indexed(0..self.index_count, 0, 0..self.instances.len() as _);
