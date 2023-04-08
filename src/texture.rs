@@ -15,10 +15,11 @@ impl Texture {
         queue: &wgpu::Queue,
         bytes: &[u8],
         label: &str,
+        is_srgb: bool,
     ) -> Result<Self> {
         let image_data = image::load_from_memory(bytes)?;
 
-        Self::from_image(device, queue, &image_data, Some(label))
+        Self::from_image(device, queue, &image_data, Some(label), is_srgb)
     }
 
     pub fn from_image(
@@ -26,7 +27,14 @@ impl Texture {
         queue: &wgpu::Queue,
         image_data: &image::DynamicImage,
         label: Option<&str>,
+        is_srgb: bool,
     ) -> Result<Self> {
+        let format = if is_srgb {
+            wgpu::TextureFormat::Rgba8UnormSrgb
+        } else {
+            wgpu::TextureFormat::Rgba8Unorm
+        };
+
         // Use to_rgba as some formats may not have alpha channel
         let rgba_data = image_data.to_rgba8();
 
@@ -44,7 +52,7 @@ impl Texture {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            format,
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
 
             // Other texture view formats are not supported by WebGL2 currently
