@@ -17,7 +17,7 @@ def index():
 # Handle static files
 @app.route('/<path:path>')
 def static_file(path):
-    return flask.send_from_directory('.', path)
+    return flask.send_from_directory('assets', path)
 
 # Fix mimetype for .js and .wasm
 @app.after_request
