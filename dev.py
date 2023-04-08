@@ -28,7 +28,7 @@ def after_request(response):
 
     # Check if we are serving a .js file based on name
     if response.headers['Content-Disposition'].endswith('.js'):
-        response.headers['Content-Type'] = 'application/javascript'
+        response.headers['Content-Type'] = 'text/javascript'
 
     # Check if we are serving a .wasm file based on name
     if response.headers['Content-Disposition'].endswith('.wasm'):
