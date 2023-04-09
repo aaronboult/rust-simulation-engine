@@ -17,7 +17,8 @@ use camera::controller::CameraController;
 use camera::uniform::CameraUniform;
 use camera::Camera;
 use light::LightUniform;
-use model::{DrawLight, DrawModel, Instance, InstanceRaw, Vertex};
+use model::instance::{Instance, InstanceRaw};
+use model::{DrawLight, DrawModel, Vertex};
 use window::{camera, light};
 
 // Type alias for size
